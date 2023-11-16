@@ -6,14 +6,19 @@ const WalletConnect = () => {
   const [walletBalance, setWalletBalance] = useState('');
 
   const connectWallet = async () => {
+
+    //check if Metamask is installed
     if (window.ethereum) {
       try {
         console.log("Wallet connected");
+
+        //connect to Metamask
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         await window.ethereum.request({ method: 'eth_requestAccounts' });
         const signer = provider.getSigner();
-        const balance = await provider.getBalance("ethers.eth");
 
+        //get wallet balance
+        const balance = await provider.getBalance("ethers.eth");
         setWalletBalance(ethers.utils.formatEther(balance));
         console.log('Balance:', balance);
       } catch (error) {
