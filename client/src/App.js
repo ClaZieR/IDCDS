@@ -1,5 +1,8 @@
 import './App.css';
-import walletConnet from './components/walletConnet';
+import { useState } from 'react';
+import walletConnet from './components/walletConnet.jsx';
+
+
 function App() {
   return (
     <div className="App">

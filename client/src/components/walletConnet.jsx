@@ -1,41 +1,41 @@
-import React, { useState } from 'react';
-const ethers = require("ethers")
+import React, { useState, useEffect } from 'react';
+import contractABI from './IDCDS.json';
+import { ethers,BigNumber } from 'ethers';
 
 
 const WalletConnect = () => {
-  const [walletBalance, setWalletBalance] = useState('');
+  const [account, setAccount] = useState("");
+  const contractAddress = "0x1abe7811BC41761Bd30cC4B4e554d232e6b6eaaA";
+  const mintAmount = 1;
 
-  const connectWallet = async () => {
-
-    //check if Metamask is installed
+  async function handleMint(){
     if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      setAccount(accounts[0]);
+      const contract = new ethers.Contract(contractAddress, contractABI.abi, signer);
       try {
-        console.log("Wallet connected");
-
-        //connect to Metamask
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const signer = provider.getSigner();
-
-        //get wallet balance
-        const balance = await provider.getBalance("ethers.eth");
-        setWalletBalance(ethers.utils.formatEther(balance));
-        console.log('Balance:', balance);
-      } catch (error) {
-        console.error('Error connecting wallet:', error);
+        const response = await contract.mint(BigNumber.from(mintAmount),{
+          value: ethers.utils.parseEther((mintAmount * 0.02).toString())
+        });
+        console.log("response", response);
+      } catch (err) {
+        console.log("Error", err);
       }
-    } else {
-      console.log("Wallet not connected");
     }
-  };
+  }
 
   return (
     <div>
-      <h1>Hello from WalletConnect component!</h1>
-      <button onClick={connectWallet}>Connect Wallet</button>
-      <h1>{walletBalance}</h1>
+      <button onClick={handleMint}>Mint</button>
+      <h1>Account: {account}</h1>
     </div>
   );
-};
+
+}
+
+  
+
 
 export default WalletConnect;

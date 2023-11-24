@@ -1,5 +1,8 @@
 //require("@nomicfoundation/hardhat-toolbox");
-//require("@nomiclabs/hardhat-etherscan");
+require("@nomiclabs/hardhat-etherscan");
+
+//when deploying for the first time comment out the second line of requrie and uncomment the first line
+//after the first deployment comment out the first line of require and uncomment the second line of require to verify the contract on etherscan
 
 //contract url = "https://sepolia.etherscan.io/address/0x327575E4cD763D7171602FB55c8C98f2A5acee1F#code"
 //contract address = "0x327575E4cD763D7171602FB55c8C98f2A5acee1F"
