@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: UNLICENSED
-
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -13,11 +12,11 @@ contract IDCDS is ERC721, Ownable {
     uint256 public totalSupply;
     uint256 public maxSupply;
     bool public isPublicMintEnabled;
-    string internal baseTokenURI;
     uint public maxPerWallet;
     address payable public withdrawWallet;
     mapping (address => uint) public walletMints;
 
+    mapping(uint256 => string) private _tokenURIs;
     mapping(address => EnumerableSet.UintSet) private _tokensByOwner;
 
     constructor() payable ERC721("IDCDS", "IDCDS") {
@@ -29,15 +28,6 @@ contract IDCDS is ERC721, Ownable {
 
     function setPublicMintEnabled(bool isPublicMintEnabled_) external onlyOwner {
         isPublicMintEnabled = isPublicMintEnabled_;
-    }
-
-    function setBaseTokenURI(string calldata baseTokenURI_) external onlyOwner {
-        baseTokenURI = baseTokenURI_;
-    }
-
-    function tokenURI(uint256 tokenId_) public view override returns (string memory) {
-        require(_exists(tokenId_), "ERC721Metadata: URI query for nonexistent token");
-        return string(abi.encodePacked(baseTokenURI, Strings.toString(tokenId_), ".json"));
     }
 
     function getOwnedTokens(address owner) external view returns (uint256[] memory) {
@@ -53,7 +43,7 @@ contract IDCDS is ERC721, Ownable {
         require(success, "Withdrawal failed");
     }
 
-    function mint(uint256 quantity_) public payable {
+    function mint(uint256 quantity_, string calldata tokenURI_) public payable {
         require(isPublicMintEnabled, "Public minting is not enabled");
         require(msg.value == quantity_ * mintPrice, "Incorrect ETH value");
         require(totalSupply + quantity_ <= maxSupply, "Not enough tokens left");
@@ -63,6 +53,7 @@ contract IDCDS is ERC721, Ownable {
             uint256 tokenId = totalSupply + 1;
             totalSupply++;
             _safeMint(msg.sender, tokenId);
+            _setTokenURI(tokenId, tokenURI_);
         }
     }
 
@@ -76,4 +67,16 @@ contract IDCDS is ERC721, Ownable {
             _tokensByOwner[to].add(tokenId);
         }
     }
+
+    function _setTokenURI(uint256 tokenId, string memory tokenURI_) internal {
+        // Set the tokenURI for tokenId
+        _tokenURIs[tokenId] = tokenURI_;
+        emit TokenURISet(tokenId, tokenURI_);
+    }
+
+    function getTokenURI(uint256 tokenId) external view returns (string memory) {
+        return _tokenURIs[tokenId];
+    }
+
+    event TokenURISet(uint256 indexed tokenId, string tokenURI);
 }
