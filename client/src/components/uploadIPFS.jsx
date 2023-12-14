@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import contractABI from './IDCDS.json';
-import { ethers, BigNumber } from 'ethers';
+import React, { useState } from 'react';
 import axios from 'axios';
+import FormData from 'form-data';
 
-const WalletConnect = () => {
+const UploadIPFS = () => {
+  const [account, setAccount] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [ipfsHash, setIpfsHash] = useState(null);
   const [jsonIpfsHash, setJsonIpfsHash] = useState(null);
   const [fileInfo, setFileInfo] = useState(null);
-  const [account, setAccount] = useState("");
-  const contractAddress = "0xaA7e16c4b5640226519D0CD4ed0115F2894d68ab";
-  const [tokenURI, setTokenURI] = useState("");
-  const mintAmount = 1;
+  //const contractAddress = "0x1abe7811BC41761Bd30cC4B4e554d232e6b6eaaA";
+
+  const handleMint = async () => {
+    // ... existing minting logic ...
+  }
 
   const pinFileToIPFS = async (JWT) => {
     if (!selectedFile) {
@@ -88,7 +89,6 @@ const WalletConnect = () => {
 
       // Set the JSON IPFS hash to state
       setJsonIpfsHash(jsonRes.data.IpfsHash);
-      setTokenURI(`https://ipfs.io/ipfs/${jsonRes.data.IpfsHash}`);
 
       // Display JSON IPFS link
       console.log("JSON IPFS Link:", `https://ipfs.io/ipfs/${jsonRes.data.IpfsHash}`);
@@ -118,33 +118,16 @@ const WalletConnect = () => {
     }
   }
 
-  const handleMint = async () => {
-    if (window.ethereum) {
-      try {
-        // Request account access
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        setAccount(accounts[0]);
-        const contract = new ethers.Contract(contractAddress, contractABI.abi, signer);
-
-        //IPFS
-        // Mint tokens with dynamic tokenURI
-        const response = await contract.mint(BigNumber.from(mintAmount), tokenURI, {
-          value: ethers.utils.parseEther((mintAmount * 0.02).toString()),
-        });
-
-        console.log("Mint response", response);
-      } catch (err) {
-        console.log("Error connecting to Ethereum or minting", err);
-      }
-    }
-  }
-
   return (
     <div>
+      <button onClick={handleMint}>Mint</button>
+      
+      {/* File input */}
       <input type="file" onChange={(e) => setSelectedFile(e.target.files[0])} />
+
+      {/* Upload button */}
       <button onClick={() => pinFileToIPFS("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhYzVjZDUzNC0wMWNiLTQzNmItYWQ2Yy05Y2ZlNGE3YjMwMzEiLCJlbWFpbCI6ImpyLmNsYXppZXJAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9LHsiaWQiOiJOWUMxIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjQ2YjhkNDVhNGRmMGYzODZjNDkzIiwic2NvcGVkS2V5U2VjcmV0IjoiNjFlMmU1MTQ4ODc3MjhkZDBhYmJlN2U0NTIzNWYxMTc5MjY4YjhjYTllMWQ4OTY1YWM0YTZmMDg1Y2Y2YzdkYyIsImlhdCI6MTcwMjM1MjIyMH0.gYvpYgy-tF_BZ4xH68PGePgMfMCeEh_D_ILz85Wxd4E")}>Upload to IPFS</button>
+      
       {/* Display IPFS link if hash is available */}
       {ipfsHash && (
         <div>
@@ -168,13 +151,9 @@ const WalletConnect = () => {
       {/* Download JSON button */}
       <button onClick={downloadJsonFile}>Download JSON</button>
 
-      {/* Mint button */}
-      <button onClick={handleMint}>Mint</button>
-
-      {/* Display account */}
       <h1>Account: {account}</h1>
     </div>
   );
-};
+}
 
-export default WalletConnect;
+export default UploadIPFS;
