@@ -12,7 +12,56 @@ const WalletConnect = () => {
   const contractAddress = "0xaA7e16c4b5640226519D0CD4ed0115F2894d68ab";
   const [tokenURI, setTokenURI] = useState("");
   const mintAmount = 1;
+  const [ownedTokens, setOwnedTokens] = useState([]);
+  const tokenList = ownedTokens.map((token, index) => token.toString());
+  const [displayOwnedTokens, setDisplayOwnedTokens] = useState(false);
+  const [tokens, setTokens] = useState([]);
+  const [tokenURIs, setTokenURIs] = useState([]);
 
+  const handleGetOwnedTokens = async () => {
+    if (window.ethereum) {
+      try {
+        // Request account access
+        
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(contractAddress, contractABI.abi, provider);
+
+        // Get owned tokens for the connected account
+        setTokens(await contract.getOwnedTokens(accounts[0]))
+
+        // Set owned tokens to state
+        setOwnedTokens(tokens);
+        setDisplayOwnedTokens(true);
+        console.log(tokens)
+
+
+      
+      } catch (err) {
+        console.error("Error connecting to Ethereum or fetching owned tokens", err);
+      }
+    }
+  }
+  const TokenURI = async () => {
+    if (window.ethereum) {
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(contractAddress, contractABI.abi, provider);
+  
+        for (const token of tokens) {
+          const uri = await contract.getTokenURI(token);
+          setTokenURIs(uri);
+          console.log(uri)
+        }
+
+        // Log information for debugging
+        // Update state or perform other actions as needed
+      } catch (err) {
+        console.error("Error connecting to Ethereum or fetching token URI", err);
+      }
+    }
+  }
+  
   const pinFileToIPFS = async (JWT) => {
     if (!selectedFile) {
       console.log("Please select a file");
@@ -121,13 +170,13 @@ const WalletConnect = () => {
   const handleMint = async () => {
     if (window.ethereum) {
       try {
+
         // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         setAccount(accounts[0]);
         const contract = new ethers.Contract(contractAddress, contractABI.abi, signer);
-
         //IPFS
         // Mint tokens with dynamic tokenURI
         const response = await contract.mint(BigNumber.from(mintAmount), tokenURI, {
@@ -173,6 +222,22 @@ const WalletConnect = () => {
 
       {/* Display account */}
       <h1>Account: {account}</h1>
+      {/* Display owned tokens when the button is pressed */}
+            {/* Button to fetch and display owned tokens */}
+            <button onClick={handleGetOwnedTokens}>Get Owned Tokens</button>
+            <button onClick={TokenURI}>Get Token URI</button>
+
+      {/* Display owned tokens when the button is pressed */}
+      {displayOwnedTokens && tokenList.length > 0 && (
+  <div>
+    <h2>Owned Token IDs:</h2>
+    <ul>
+      {tokenList.map((tokenId, index) => (
+        <li key={index}>{tokenId}</li>
+      ))}
+    </ul>
+  </div>
+)}
     </div>
   );
 };
