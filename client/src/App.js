@@ -1,7 +1,7 @@
 import './App.css';
 import { useState } from 'react';
 import walletConnet from './components/walletConnet.jsx';
-
+import test from './components/test.jsx';
 
 
 function App() {
@@ -10,6 +10,7 @@ function App() {
       <header className="App-header">
         <h1>
           {walletConnet()}
+          {test()}
 
         </h1>
       </header>

@@ -17,6 +17,8 @@ const WalletConnect = () => {
   const [displayOwnedTokens, setDisplayOwnedTokens] = useState(false);
   const [tokens, setTokens] = useState([]);
   const [tokenURIs, setTokenURIs] = useState([]);
+  const [ipfsUrl, setIpfsUrl] = useState("");
+  
 
   const handleGetOwnedTokens = async () => {
     if (window.ethereum) {
@@ -48,14 +50,21 @@ const WalletConnect = () => {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contract = new ethers.Contract(contractAddress, contractABI.abi, provider);
   
+        const ipfsUrls = [];
+  
         for (const token of tokens) {
           const uri = await contract.getTokenURI(token);
-          setTokenURIs(uri);
-          console.log(uri)
+          console.log(uri);
+  
+          const response = await fetch(uri);
+          const data = await response.json();
+          const imageUrl = data.ipfsUrl;
+          ipfsUrls.push(imageUrl);
         }
-
-        // Log information for debugging
-        // Update state or perform other actions as needed
+  
+        // Set the accumulated IPFS URLs to state
+        setIpfsUrl(ipfsUrls);
+  
       } catch (err) {
         console.error("Error connecting to Ethereum or fetching token URI", err);
       }
@@ -235,6 +244,9 @@ const WalletConnect = () => {
       {tokenList.map((tokenId, index) => (
         <li key={index}>{tokenId}</li>
       ))}
+      {ipfsUrl && ipfsUrl.map((url, index) => (
+  <img key={index} src={url} alt={`IPFS Image ${index}`} />
+))}
     </ul>
   </div>
 )}
