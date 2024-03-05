@@ -74,6 +74,16 @@ contract IDCDS is ERC721, Ownable {
         emit TokenURISet(tokenId, tokenURI_);
     }
 
+
+    function getOwnedTokensByWallet(address wallet) external view returns (uint256[] memory) {
+    uint256[] memory ownedTokens = new uint256[](_tokensByOwner[wallet].length());
+    for (uint256 i = 0; i < _tokensByOwner[wallet].length(); i++) {
+        ownedTokens[i] = _tokensByOwner[wallet].at(i);
+    }
+    return ownedTokens;
+}
+
+
     function getTokenURI(uint256 tokenId) external view returns (string memory) {
         return _tokenURIs[tokenId];
     }

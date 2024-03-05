@@ -18,21 +18,28 @@ const WalletConnect = () => {
   const [tokens, setTokens] = useState([]);
   const [tokenURIs, setTokenURIs] = useState([]);
   const [ipfsUrl, setIpfsUrl] = useState("");
-  
+  const [customWalletAddress, setCustomWalletAddress] = useState("")
 
   const handleGetOwnedTokens = async () => {
     if (window.ethereum) {
       try {
+        let targetAddress = account;
         // Request account access
+
+        if (customWalletAddress) {
+          // If a custom wallet address is provided, use it instead
+          targetAddress = customWalletAddress;
+        }
         
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const contract = new ethers.Contract(contractAddress, contractABI.abi, provider);
 
         // Get owned tokens for the connected account
-        setTokens(await contract.getOwnedTokens(accounts[0]))
+        const tokens = await contract.getOwnedTokens(targetAddress);
 
         // Set owned tokens to state
+        setTokens(tokens);
         setOwnedTokens(tokens);
         setDisplayOwnedTokens(true);
         console.log(tokens)
@@ -223,6 +230,12 @@ const WalletConnect = () => {
         </div>
       )}
 
+      <input
+        type="text"
+        placeholder="Enter custom wallet address"
+        value={customWalletAddress}
+        onChange={(e) => setCustomWalletAddress(e.target.value)}
+      />
       {/* Download JSON button */}
       <button onClick={downloadJsonFile}>Download JSON</button>
 

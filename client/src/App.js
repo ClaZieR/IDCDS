@@ -10,7 +10,6 @@ function App() {
       <header className="App-header">
         <h1>
           {walletConnet()}
-          {test()}
 
         </h1>
       </header>
