@@ -43,18 +43,19 @@ contract IDCDS is ERC721, Ownable {
         require(success, "Withdrawal failed");
     }
 
-    function mint(uint256 quantity_, string calldata tokenURI_) public payable {
+    function mintAndTransfer(address to, string calldata tokenURI_) external payable {
+        require(msg.value == mintPrice, "Incorrect ETH value");
         require(isPublicMintEnabled, "Public minting is not enabled");
-        require(msg.value == quantity_ * mintPrice, "Incorrect ETH value");
-        require(totalSupply + quantity_ <= maxSupply, "Not enough tokens left");
-        require(walletMints[msg.sender] + quantity_ <= maxPerWallet, "Max per wallet");
-    
-        for (uint256 i = 0; i < quantity_; i++) {
-            uint256 tokenId = totalSupply + 1;
-            totalSupply++;
-            _safeMint(msg.sender, tokenId);
-            _setTokenURI(tokenId, tokenURI_);
-        }
+        require(totalSupply < maxSupply, "Maximum supply reached");
+        require(walletMints[msg.sender] + 1 <= maxPerWallet, "Max per wallet reached");
+
+        uint256 tokenId = totalSupply + 1;
+        totalSupply++;
+        _safeMint(address(this), tokenId);
+        _setTokenURI(tokenId, tokenURI_);
+
+
+        safeTransferFrom(address(this), to, tokenId);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
@@ -69,20 +70,9 @@ contract IDCDS is ERC721, Ownable {
     }
 
     function _setTokenURI(uint256 tokenId, string memory tokenURI_) internal {
-        // Set the tokenURI for tokenId
         _tokenURIs[tokenId] = tokenURI_;
         emit TokenURISet(tokenId, tokenURI_);
     }
-
-
-    function getOwnedTokensByWallet(address wallet) external view returns (uint256[] memory) {
-    uint256[] memory ownedTokens = new uint256[](_tokensByOwner[wallet].length());
-    for (uint256 i = 0; i < _tokensByOwner[wallet].length(); i++) {
-        ownedTokens[i] = _tokensByOwner[wallet].at(i);
-    }
-    return ownedTokens;
-}
-
 
     function getTokenURI(uint256 tokenId) external view returns (string memory) {
         return _tokenURIs[tokenId];

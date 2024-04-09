@@ -1,19 +1,44 @@
-import './App.css';
-import { useState } from 'react';
-import walletConnet from './components/walletConnet.jsx';
-import test from './components/test.jsx';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import UniversityPage from './components/UniversityPage';
+import StudentsPage from './components/StudentsPage';
+import CompaniesPage from './components/CompaniesPage';
+import { Layout, Row, Col, Button } from 'antd';
 
+const { Content } = Layout;
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>
-          {walletConnet()}
-
-        </h1>
-      </header>
-    </div>
+    <Router>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Layout>
+          <Content style={{ padding: '20px' }}>
+            <Row justify="center">
+              <Col>
+                <Button type="primary" size="large">
+                  <Link to="/university">University</Link>
+                </Button>
+              </Col>
+              <Col style={{ marginLeft: '10px', marginRight: '10px' }}>
+                <Button type="primary" size="large">
+                  <Link to="/students">Students</Link>
+                </Button>
+              </Col>
+              <Col>
+                <Button type="primary" size="large">
+                  <Link to="/companies">Companies</Link>
+                </Button>
+              </Col>
+            </Row>
+            <Routes>
+              <Route path="/university" element={<UniversityPage />} />
+              <Route path="/students" element={<StudentsPage />} />
+              <Route path="/companies" element={<CompaniesPage />} />
+            </Routes>
+          </Content>
+        </Layout>
+      </Layout>
+    </Router>
   );
 }
 
