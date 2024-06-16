@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import UniversityPage from './components/UniversityPage';
 import StudentsPage from './components/StudentsPage';
 import CompaniesPage from './components/CompaniesPage';
+import Unifront from './components/Unifront';
 import { Layout, Row, Col, Button } from 'antd';
 
 const { Content } = Layout;
@@ -34,6 +35,7 @@ function App() {
               <Route path="/university" element={<UniversityPage />} />
               <Route path="/students" element={<StudentsPage />} />
               <Route path="/companies" element={<CompaniesPage />} />
+              <Route path="/unifront" element={<Unifront />} />
             </Routes>
           </Content>
         </Layout>
