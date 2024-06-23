@@ -72,7 +72,7 @@ app.get('/status/:walletAddress', async (req, res) => {
     if (result.recordset.length > 0) {
       res.send(result.recordset[0]);
     } else {
-      res.status(404).send('No record found');
+      res.status(200).json({ msg: 'No record found' });
     }
   } catch (err) {
     console.error(err);

@@ -20,7 +20,7 @@ contract IDCDS is ERC721, Ownable {
     mapping(address => EnumerableSet.UintSet) private _tokensByOwner;
 
     constructor() payable ERC721("IDCDS", "IDCDS") {
-        mintPrice = 0.02 ether;
+        mintPrice = 0.0002 ether;
         totalSupply = 0;
         maxSupply = 10000;
         maxPerWallet = 100;
@@ -43,19 +43,18 @@ contract IDCDS is ERC721, Ownable {
         require(success, "Withdrawal failed");
     }
 
-    function mintAndTransfer(address to, string calldata tokenURI_) external payable {
-        require(msg.value == mintPrice, "Incorrect ETH value");
+    function mint(uint256 quantity_, string calldata tokenURI_) public payable {
         require(isPublicMintEnabled, "Public minting is not enabled");
-        require(totalSupply < maxSupply, "Maximum supply reached");
-        require(walletMints[msg.sender] + 1 <= maxPerWallet, "Max per wallet reached");
-
-        uint256 tokenId = totalSupply + 1;
-        totalSupply++;
-        _safeMint(address(this), tokenId);
-        _setTokenURI(tokenId, tokenURI_);
-
-
-        safeTransferFrom(address(this), to, tokenId);
+        require(msg.value == quantity_ * mintPrice, "Incorrect ETH value");
+        require(totalSupply + quantity_ <= maxSupply, "Not enough tokens left");
+        require(walletMints[msg.sender] + quantity_ <= maxPerWallet, "Max per wallet");
+    
+        for (uint256 i = 0; i < quantity_; i++) {
+            uint256 tokenId = totalSupply + 1;
+            totalSupply++;
+            _safeMint(msg.sender, tokenId);
+            _setTokenURI(tokenId, tokenURI_);
+        }
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override {
@@ -70,6 +69,7 @@ contract IDCDS is ERC721, Ownable {
     }
 
     function _setTokenURI(uint256 tokenId, string memory tokenURI_) internal {
+        // Set the tokenURI for tokenId
         _tokenURIs[tokenId] = tokenURI_;
         emit TokenURISet(tokenId, tokenURI_);
     }

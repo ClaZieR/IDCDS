@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import Register from './Register';
 import Status from './Status';
 import Verify from './Verify';
@@ -8,12 +9,20 @@ import { ethers } from 'ethers'; // Import ethers.js
 function Unifront() {
   const [walletAddress, setWalletAddress] = useState(null);
   const [verificationStatus, setVerificationStatus] = useState(null);
+  const [renderRegister, setRenderRegister] = useState(false);
+  const navigate = useNavigate(); // Use the useNavigate hook
 
   useEffect(() => {
     if (walletAddress) {
       checkStatus();
     }
   }, [walletAddress]);
+
+  useEffect(() => {
+    if (verificationStatus && verificationStatus.verification_status === 'verified') {
+      navigate('/university'); // Redirect to /university if verified
+    }
+  }, [verificationStatus, navigate]);
 
   const connectWallet = async () => {
     if (window.ethereum) {
@@ -34,8 +43,15 @@ function Unifront() {
   const checkStatus = async () => {
     if (walletAddress) {
       try {
-        const response = await axios.get(`http://localhost:3000/status/${walletAddress}`); // Corrected URL
-        setVerificationStatus(response.data);
+        const response = await axios.get(`http://localhost:1433/status/${walletAddress}`);
+        console.log(response.data);
+        if (response.data.msg === 'No record found') {
+          setRenderRegister(true);
+          setVerificationStatus(null);
+        } else {
+          setVerificationStatus(response.data);
+          setRenderRegister(false);
+        }
       } catch (error) {
         console.error("Error fetching status:", error);
       }
@@ -54,10 +70,12 @@ function Unifront() {
             )}
           </div>
         ) : (
-          <div>
-            <Register walletAddress={walletAddress} />
-            <button onClick={checkStatus}>Check Status</button>
-          </div>
+          renderRegister && (
+            <div>
+              <Register walletAddress={walletAddress} />
+              <button onClick={checkStatus}>Check Status</button>
+            </div>
+          )
         )
       ) : (
         <button onClick={connectWallet}>Connect Metamask</button>

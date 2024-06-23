@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import contractABI from './IDCDS.json';
 import { ethers, BigNumber } from 'ethers';
-import { Layout, Button, Input } from 'antd';
+import { Layout, Button, Input, notification } from 'antd';
 import axios from 'axios';
+
+const { Content } = Layout;
 
 function UniversityPage() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -12,18 +14,19 @@ function UniversityPage() {
   const [account, setAccount] = useState("");
   const [walletConnected, setWalletConnected] = useState(false);
   const [recipientWallet, setRecipientWallet] = useState("");
-  const contractAddress = "0xaA7e16c4b5640226519D0CD4ed0115F2894d68ab";
+  const contractAddress = "0x03826837bd6660932d824a3F939166a6DF0479e8";
   const [tokenURI, setTokenURI] = useState("");
   const mintAmount = 1;
   const [tokenId, setTokenId] = useState(null);
-
-  const { Content } = Layout;
+  const [loading, setLoading] = useState(false);
+  const [walletInputDisabled, setWalletInputDisabled] = useState(true); // State to manage disabling wallet input
 
   const connectWallet = async () => {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setAccount(accounts[0]);
       setWalletConnected(true);
+      setWalletInputDisabled(false); // Enable wallet input once wallet is connected
     } catch (err) {
       console.error("Error connecting to wallet", err);
     }
@@ -34,6 +37,8 @@ function UniversityPage() {
       console.log("Please select a file");
       return;
     }
+
+    setLoading(true);
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -59,28 +64,27 @@ function UniversityPage() {
 
       console.log("File pinned successfully:", res.data);
 
-      // Set the IPFS hash to state
       setIpfsHash(res.data.IpfsHash);
 
-      // Set file information to state
       const fileInformation = {
         name: selectedFile.name,
         ipfsUrl: `https://ipfs.io/ipfs/${res.data.IpfsHash}`,
       };
       setFileInfo(fileInformation);
 
-      // Upload JSON file to IPFS
       uploadJsonFileToIPFS(JWT, fileInformation);
 
-      // Display IPFS hash, Pin Size, and Timestamp
       console.log("IPFS Hash:", res.data.IpfsHash);
       console.log("Pin Size:", res.data.PinSize);
       console.log("Timestamp:", res.data.Timestamp);
+
+      setLoading(false);
     } catch (error) {
       console.error("Error pinning file to IPFS:", error.message);
       if (error.response) {
         console.error("Response data:", error.response.data);
       }
+      setLoading(false);
     }
   };
 
@@ -102,11 +106,9 @@ function UniversityPage() {
 
       console.log("JSON file pinned successfully:", jsonRes.data);
 
-      // Set the JSON IPFS hash to state
       setJsonIpfsHash(jsonRes.data.IpfsHash);
       setTokenURI(`https://ipfs.io/ipfs/${jsonRes.data.IpfsHash}`);
 
-      // Display JSON IPFS link
       console.log("JSON IPFS Link:", `https://ipfs.io/ipfs/${jsonRes.data.IpfsHash}`);
     } catch (error) {
       console.error("Error pinning JSON file to IPFS:", error.message);
@@ -118,18 +120,31 @@ function UniversityPage() {
 
   const handleMint = async () => {
     try {
+      setLoading(true);
+
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(contractAddress, contractABI.abi, signer);
-  
-      // Mint tokens with dynamic tokenURI
+
       const response = await contract.mint(BigNumber.from(mintAmount), tokenURI, {
         value: ethers.utils.parseEther((mintAmount * 0.02).toString()),
       });
-  
+
       console.log("Mint response", response);
+
+      notification.success({
+        message: "Minting Successful",
+        description: "Your token has been minted successfully.",
+      });
+
+      setLoading(false);
     } catch (err) {
       console.log("Error minting", err);
+      setLoading(false);
+      notification.error({
+        message: "Minting Failed",
+        description: "There was an error while minting your token.",
+      });
     }
   };
 
@@ -138,103 +153,131 @@ function UniversityPage() {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(contractAddress, contractABI.abi, signer);
-  
+
       const ownedTokens = await contract.getOwnedTokens(signer.getAddress());
       console.log("Owned tokens", ownedTokens);
-  
-      // Get the last token ID
+
       const lastTokenId = ownedTokens[ownedTokens.length - 1];
-  
-      // Set tokenId state
+
       setTokenId(lastTokenId);
-  
-      // Return the lastTokenId
+
       return lastTokenId;
     } catch (error) {
       console.error("Error fetching owned tokens:", error);
-      throw error; // Throw the error to handle it later
+      throw error;
     }
   };
-  
+
   const fetchTokenAndTransfer = async () => {
     try {
-      const tokenId = await handleGetOwnedTokens(); // Wait for tokenId to be set
+      const tokenId = await handleGetOwnedTokens();
       if (!tokenId) {
         console.log("Token ID is null. Aborting transfer.");
         return;
       }
-  
+
+      setLoading(true);
+
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const contract = new ethers.Contract(contractAddress, contractABI.abi, signer);
-  
+
       const transferResponse = await contract.transferFrom(
-        signer.getAddress(), // Sender's address (your address)
-        recipientWallet, // Recipient's wallet address from state
-        tokenId // Token ID obtained from minting
+        signer.getAddress(),
+        recipientWallet,
+        tokenId
       );
-  
+
       console.log("Transfer response", transferResponse);
+
+      notification.success({
+        message: "Transfer Successful",
+        description: "Your token has been transferred successfully.",
+      });
+
+      setLoading(false);
     } catch (error) {
       console.error("Error transferring:", error);
+
+      notification.error({
+        message: "Transfer Failed",
+        description: "There was an error while transferring your token.",
+      });
+
+      setLoading(false);
     }
   };
 
-
-
   return (
-
-<Layout style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-  <Content style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-    {!walletConnected && (
-      <Button onClick={connectWallet} style={{ width: '200px' }}>Connect Wallet</Button>
-    )}
-
-    {walletConnected && (
-      <>
-        <h1>Account: {account}</h1>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-          <Input type="file" style={{ width: '200px' }} onChange={(e) => setSelectedFile(e.target.files[0])} />
-        </div>
-        <Button style={{ width: '200px' }} onClick={() => pinFileToIPFS("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhYzVjZDUzNC0wMWNiLTQzNmItYWQ2Yy05Y2ZlNGE3YjMwMzEiLCJlbWFpbCI6ImpyLmNsYXppZXJAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9LHsiaWQiOiJOWUMxIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjQ2YjhkNDVhNGRmMGYzODZjNDkzIiwic2NvcGVkS2V5U2VjcmV0IjoiNjFlMmU1MTQ4ODc3MjhkZDBhYmJlN2U0NTIzNWYxMTc5MjY4YjhjYTllMWQ4OTY1YWM0YTZmMDg1Y2Y2YzdkYyIsImlhdCI6MTcwMjM1MjIyMH0.gYvpYgy-tF_BZ4xH68PGePgMfMCeEh_D_ILz85Wxd4E")}>
-          Upload to IPFS
-        </Button>
-
-        {ipfsHash && (
-          <div>
-            <h2>IPFS Link:</h2>
-            <a href={`https://ipfs.io/ipfs/${ipfsHash}`} target="_blank" rel="noopener noreferrer">
-              {`https://ipfs.io/ipfs/${ipfsHash}`}
-            </a>
-          </div>
+    <Layout style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Content style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+        {!walletConnected && (
+          <Button onClick={connectWallet} style={{ width: '200px' }}>Connect Wallet</Button>
         )}
 
-        {jsonIpfsHash && (
-          <div>
-            <h2>JSON IPFS Link:</h2>
-            <a href={`https://ipfs.io/ipfs/${jsonIpfsHash}`} target="_blank" rel="noopener noreferrer">
-              {`https://ipfs.io/ipfs/${jsonIpfsHash}`}
-            </a>
-          </div>
+        {walletConnected && (
+          <>
+            <h1>Account: {account}</h1>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+              <Input type="file" style={{ width: '200px' }} onChange={(e) => setSelectedFile(e.target.files[0])} />
+            </div>
+            <Button
+              style={{ width: '200px' }}
+              onClick={() => pinFileToIPFS("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhYzVjZDUzNC0wMWNiLTQzNmItYWQ2Yy05Y2ZlNGE3YjMwMzEiLCJlbWFpbCI6ImpyLmNsYXppZXJAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9LHsiaWQiOiJOWUMxIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjQ2YjhkNDVhNGRmMGYzODZjNDkzIiwic2NvcGVkS2V5U2VjcmV0IjoiNjFlMmU1MTQ4ODc3MjhkZDBhYmJlN2U0NTIzNWYxMTc5MjY4YjhjYTllMWQ4OTY1YWM0YTZmMDg1Y2Y2YzdkYyIsImlhdCI6MTcwMjM1MjIyMH0.gYvpYgy-tF_BZ4xH68PGePgMfMCeEh_D_ILz85Wxd4E")}
+              loading={loading}
+            >
+              Upload to IPFS
+            </Button>
+
+            {ipfsHash && (
+              <div>
+                <h2>IPFS Link:</h2>
+                <a href={`https://ipfs.io/ipfs/${ipfsHash}`} target="_blank" rel="noopener noreferrer">
+                  {`https://ipfs.io/ipfs/${ipfsHash}`}
+                </a>
+              </div>
+            )}
+
+            {jsonIpfsHash && (
+              <div>
+                <h2>JSON IPFS Link:</h2>
+                <a href={`https://ipfs.io/ipfs/${jsonIpfsHash}`} target="_blank" rel="noopener noreferrer">
+                  {`https://ipfs.io/ipfs/${jsonIpfsHash}`}
+                </a>
+              </div>
+            )}
+
+            <Input
+              type="text"
+              placeholder="Recipient's wallet address"
+              value={recipientWallet}
+              onChange={(e) => setRecipientWallet(e.target.value)}
+              style={{ width: '200px' }}
+              disabled={loading || !jsonIpfsHash || !walletInputDisabled}
+            />
+
+            <Button
+              onClick={handleMint}
+              style={{ width: '200px' }}
+              disabled={loading || !jsonIpfsHash}
+              loading={loading}
+            >
+              Mint
+            </Button>
+
+            <Button
+              onClick={fetchTokenAndTransfer}
+              style={{ width: '200px' }}
+              disabled={loading || !tokenId}
+              loading={loading}
+            >
+              Transfer Token
+            </Button>
+          </>
         )}
-
-        <Input
-          type="text"
-          placeholder="Recipient's wallet address"
-          value={recipientWallet}
-          onChange={(e) => setRecipientWallet(e.target.value)}
-          style={{ width: '200px' }} // Added style to shorten the input field
-        />
-
-        <Button onClick={handleMint} style={{ width: '200px' }}>Mint</Button>
-        <Button onClick={fetchTokenAndTransfer} style={{ width: '200px' }}>Transfer Token</Button>
-      </>
-    )}
-  </Content>
-</Layout>
-
-
+      </Content>
+    </Layout>
   );
-};
+}
 
 export default UniversityPage;

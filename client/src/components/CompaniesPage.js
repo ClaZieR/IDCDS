@@ -17,7 +17,7 @@ function CompaniesPage() {
     if (customWalletAddress && window.ethereum) {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contractAddress = "0xaA7e16c4b5640226519D0CD4ed0115F2894d68ab";
+        const contractAddress = "0x03826837bd6660932d824a3F939166a6DF0479e8";
         const contract = new ethers.Contract(contractAddress, contractABI.abi, provider);
 
         const tokens = await contract.getOwnedTokens(customWalletAddress);
