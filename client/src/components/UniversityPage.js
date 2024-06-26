@@ -14,7 +14,7 @@ function UniversityPage() {
   const [account, setAccount] = useState("");
   const [walletConnected, setWalletConnected] = useState(false);
   const [recipientWallet, setRecipientWallet] = useState("");
-  const contractAddress = "0x03826837bd6660932d824a3F939166a6DF0479e8";
+  const contractAddress = "0x7EF8C8c735aF5e06f03D1a10CfC8C06C2f4aCA9b";
   const [tokenURI, setTokenURI] = useState("");
   const mintAmount = 1;
   const [tokenId, setTokenId] = useState(null);
@@ -127,10 +127,17 @@ function UniversityPage() {
       const contract = new ethers.Contract(contractAddress, contractABI.abi, signer);
 
       const response = await contract.mint(BigNumber.from(mintAmount), tokenURI, {
-        value: ethers.utils.parseEther((mintAmount * 0.02).toString()),
+        value: ethers.utils.parseEther((mintAmount * 0.0002).toString()),
       });
 
       console.log("Mint response", response);
+
+      // Wait for the transaction to be mined
+      const receipt = await response.wait();
+      console.log("Transaction receipt", receipt);
+
+      // Fetch and set the token ID after minting
+      await handleGetOwnedTokens();
 
       notification.success({
         message: "Minting Successful",
@@ -146,7 +153,7 @@ function UniversityPage() {
         description: "There was an error while minting your token.",
       });
     }
-  };
+  }
 
   const handleGetOwnedTokens = async () => {
     try {
@@ -253,7 +260,7 @@ function UniversityPage() {
               value={recipientWallet}
               onChange={(e) => setRecipientWallet(e.target.value)}
               style={{ width: '200px' }}
-              disabled={loading || !jsonIpfsHash || !walletInputDisabled}
+              disabled={loading || !jsonIpfsHash || walletInputDisabled}
             />
 
             <Button

@@ -2,10 +2,10 @@ async function main() {
     const [deployer] = await ethers.getSigners();
     console.log("Deploying contracts with the account:", deployer.address);
   
-    const StudentRecord = await ethers.getContractFactory("StudentRecord");
-    const studentRecord = await StudentRecord.deploy();  // Deployment happens here
+    const IDCDS = await ethers.getContractFactory("IDCDS");
+    const idcds = await IDCDS.deploy();  // Deployment happens here
   
-    console.log("StudentRecord deployed to:", studentRecord.address);
+    console.log("StudentRecord deployed to:", idcds.address);
   }
   
   const runMain = async () => {

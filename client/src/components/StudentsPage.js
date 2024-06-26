@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 import contractABI from './IDCDS.json';
 
 const studentRecordAddress = "0xD83B69B76f8e8a45722BfbeBb4D88b329ac593De";
-const contractAddress = "0x03826837bd6660932d824a3F939166a6DF0479e8"; // Replace with your actual contract address
+const contractAddress = "0x7EF8C8c735aF5e06f03D1a10CfC8C06C2f4aCA9b"; // Replace with your actual contract address
 const contract = new ethers.Contract(contractAddress, contractABI.abi);
 
 function StudentsPage() {
