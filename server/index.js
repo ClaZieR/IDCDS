@@ -127,6 +127,26 @@ app.post('/verify', async (req, res) => {
   });
   
 
+  app.get('/university/:walletAddress', async (req, res) => {
+    const { walletAddress } = req.params;
+  
+    try {
+      const pool = await sql.connect(config);
+      const result = await pool.request()
+        .input('walletAddress', sql.NVarChar, walletAddress)
+        .query('SELECT name, website ,id FROM universities WHERE wallet_address = @walletAddress');
+  
+      if (result.recordset.length > 0) {
+        res.send(result.recordset[0]);
+      } else {
+        res.status(404).send('No record found');
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Internal server error');
+    }
+  });
+
 const PORT = process.env.DB_PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

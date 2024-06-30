@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import StudentRecord from "./StudentRecord.json";
 import { ethers } from "ethers";
 import contractABI from './IDCDS.json';
+import axios from 'axios';
 
-const studentRecordAddress = "0xD83B69B76f8e8a45722BfbeBb4D88b329ac593De";
+const studentRecordAddress = "0x664C935800D333006f3C74aB5CB5b91AD8577680";
 const contractAddress = "0x7EF8C8c735aF5e06f03D1a10CfC8C06C2f4aCA9b"; // Replace with your actual contract address
-const contract = new ethers.Contract(contractAddress, contractABI.abi);
 
 function StudentsPage() {
   const [formInput, setFormInput] = useState({
@@ -21,6 +21,11 @@ function StudentsPage() {
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
   const [ipfsUrls, setIpfsUrls] = useState([]);
+  const [tokens, setTokens] = useState([]);
+  const [walletAddress, setWalletAddress] = useState(null);
+  const [University, setUniversity] = useState(null);
+  const [IssuedDate, setIssuedDate] = useState(null);
+  const [Certificate, setCertificate] = useState(null);
 
   useEffect(() => {
     if (walletConnected) {
@@ -37,6 +42,8 @@ function StudentsPage() {
         setProvider(provider);
         setSigner(signer);
         setWalletConnected(true);
+        setWalletAddress(accounts[0]);
+        console.log("Wallet connected:", accounts[0]);
       } else {
         alert("Please install MetaMask to use this feature.");
       }
@@ -77,7 +84,10 @@ function StudentsPage() {
       const student = await contract.getStudent();
       if (student.firstName) {
         setStudent(student);
-        await fetchImages(student.walletAddress); // Fetch images related to student's wallet address
+        console.log("Student record found:", student);
+        await fetchImages(walletAddress); // Fetch images related to student's wallet address
+      } else {
+        console.log("No student record found.");
       }
     } catch (error) {
       console.error("No student record found:", error);
@@ -85,16 +95,37 @@ function StudentsPage() {
   };
 
   const fetchImages = async (walletAddress) => {
+    console.log("Fetching images for wallet address:", walletAddress);
     try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(contractAddress, contractABI.abi, provider);
       const tokens = await contract.getOwnedTokens(walletAddress); // Assuming this function exists on your contract
+      console.log("Owned tokens:", tokens);
       const ipfsUrls = [];
+
       for (const token of tokens) {
         const uri = await contract.getTokenURI(token);
-        // Assuming the URI format is correct and you fetch the image URL from IPFS
-        const response = await fetch(uri);
-        const data = await response.json();
-        ipfsUrls.push(data.ipfsUrl);
+        console.log("Token URI:", uri);
+        const response = await axios.get(uri);
+        const data = response.data;
+        setUniversity(data.universityName);
+        setIssuedDate(data.IssuedDate);
+        setCertificate(data.name);
+        // Fetch verification status
+        const verificationResponse = await axios.get(`http://localhost:1433/status/${data.universityWallet}`);
+
+        const isVerified = verificationResponse.data.verification_status === 'verified';
+        
+        ipfsUrls.push({
+          url: data.ipfsUrl,
+          isVerified,
+          universityName: data.universityName,
+          issuedDate: data.issuedDate,
+          certificate: data.name
+        });
       }
+
+      setTokens(tokens);
       setIpfsUrls(ipfsUrls);
     } catch (error) {
       console.error("Error fetching images:", error);
@@ -149,10 +180,16 @@ function StudentsPage() {
           )}
           {ipfsUrls.length > 0 && (
             <div>
-              <h2>Student Images</h2>
+              <h2>Student Certificates</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                {ipfsUrls.map((url, index) => (
-                  <img key={index} src={url} alt={`Student Image ${index}`} style={{ width: '200px', height: '200px', margin: '10px' }} />
+                {ipfsUrls.map((ipfsData, index) => (
+                  <div key={index} style={{ margin: '10px' }}>
+                    <img src={ipfsData.url} alt={`Student Certificate ${index}`} style={{ width: '200px', height: '200px' }} />
+                    <p>University: {ipfsData.universityName}</p>
+                    <p>Issued Date: {ipfsData.issuedDate}</p>
+                    <p>Certificate: {ipfsData.certificate}</p>
+                    {ipfsData.isVerified && <p>Verified</p>}
+                  </div>
                 ))}
               </div>
             </div>
@@ -161,6 +198,7 @@ function StudentsPage() {
       )}
     </div>
   );
+  
 }
 
 export default StudentsPage;

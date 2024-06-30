@@ -40,6 +40,10 @@ contract StudentRecord {
         return students[msg.sender];
     }
 
+    function getStudentByAddress(address _address) public view returns (Student memory) {
+        return students[_address];
+    }
+
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No balance to withdraw");

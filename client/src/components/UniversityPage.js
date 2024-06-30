@@ -19,18 +19,35 @@ function UniversityPage() {
   const mintAmount = 1;
   const [tokenId, setTokenId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [walletInputDisabled, setWalletInputDisabled] = useState(true); // State to manage disabling wallet input
+  const [walletInputDisabled, setWalletInputDisabled] = useState(true);
+  const [universityName, setUniversityName] = useState(null); 
+  const [universityWebsite, setUniversityWebsite] = useState(null);
+  const [universityID, setUniversityID] = useState(null);
+  const [universityWallet, setUniversityWallet] = useState(null);
 
   const connectWallet = async () => {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setAccount(accounts[0]);
       setWalletConnected(true);
-      setWalletInputDisabled(false); // Enable wallet input once wallet is connected
+      setWalletInputDisabled(false);
+      fetchUnidata(accounts[0]);
+      setUniversityWallet(accounts[0]);
     } catch (err) {
       console.error("Error connecting to wallet", err);
     }
   };
+
+  const fetchUnidata = async (addressWallet) => {
+    try {
+      const response = await axios.get(`http://localhost:1433/university/${addressWallet}`);
+      setUniversityID(response.data.id);
+      setUniversityName(response.data.name);
+      setUniversityWebsite(response.data.website);      
+    } catch (error) {
+      console.error("Error fetching university data:", error);
+    }
+  }
 
   const pinFileToIPFS = async (JWT) => {
     if (!selectedFile) {
@@ -44,7 +61,7 @@ function UniversityPage() {
     formData.append('file', selectedFile);
 
     const pinataMetadata = JSON.stringify({
-      name: 'File name',
+      name: `File-${Date.now()}`,
     });
     formData.append('pinataMetadata', pinataMetadata);
 
@@ -62,6 +79,25 @@ function UniversityPage() {
         }
       });
 
+
+      const fetchStudent = async () => {
+        try {
+          if (!signer) {
+            await connectWallet();
+          }
+          const contract = new ethers.Contract(studentRecordAddress, StudentRecord.abi, signer);
+          const student = await contract.getStudent();
+          if (student.firstName) {
+            setStudent(student);
+            console.log("Student record found:", student);
+            await fetchImages(walletAddress); // Fetch images related to student's wallet address
+          } else {
+            console.log("No student record found.");
+          }
+        } catch (error) {
+          console.error("No student record found:", error);
+        }
+      };
       console.log("File pinned successfully:", res.data);
 
       setIpfsHash(res.data.IpfsHash);
@@ -69,10 +105,15 @@ function UniversityPage() {
       const fileInformation = {
         name: selectedFile.name,
         ipfsUrl: `https://ipfs.io/ipfs/${res.data.IpfsHash}`,
+        universityWallet: universityWallet,
+        universityID: universityID,
+        universityName: universityName,
+        universityWebsite: universityWebsite,
+        IssuedDate: Date.now(),
       };
       setFileInfo(fileInformation);
 
-      uploadJsonFileToIPFS(JWT, fileInformation);
+      pinJSONToIPFS(JWT, fileInformation);
 
       console.log("IPFS Hash:", res.data.IpfsHash);
       console.log("Pin Size:", res.data.PinSize);
@@ -88,28 +129,26 @@ function UniversityPage() {
     }
   };
 
-  const uploadJsonFileToIPFS = async (JWT, fileInformation) => {
-    const jsonContent = JSON.stringify(fileInformation, null, 2);
-    const jsonBlob = new Blob([jsonContent], { type: 'application/json' });
-
-    const jsonFormData = new FormData();
-    jsonFormData.append('file', jsonBlob);
+  const pinJSONToIPFS = async (JWT, fileInformation) => {
+    const jsonContent = {
+      ...fileInformation,
+      timestamp: Date.now(),
+    };
 
     try {
-      const jsonRes = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", jsonFormData, {
-        maxBodyLength: "Infinity",
+      const res = await axios.post("https://api.pinata.cloud/pinning/pinJSONToIPFS", jsonContent, {
         headers: {
-          'Content-Type': `multipart/form-data; boundary=${jsonFormData._boundary}`,
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${JWT}`
         }
       });
 
-      console.log("JSON file pinned successfully:", jsonRes.data);
+      console.log("JSON file pinned successfully:", res.data);
 
-      setJsonIpfsHash(jsonRes.data.IpfsHash);
-      setTokenURI(`https://ipfs.io/ipfs/${jsonRes.data.IpfsHash}`);
+      setJsonIpfsHash(res.data.IpfsHash);
+      setTokenURI(`https://ipfs.io/ipfs/${res.data.IpfsHash}`);
 
-      console.log("JSON IPFS Link:", `https://ipfs.io/ipfs/${jsonRes.data.IpfsHash}`);
+      console.log("JSON IPFS Link:", `https://ipfs.io/ipfs/${res.data.IpfsHash}`);
     } catch (error) {
       console.error("Error pinning JSON file to IPFS:", error.message);
       if (error.response) {
@@ -132,11 +171,9 @@ function UniversityPage() {
 
       console.log("Mint response", response);
 
-      // Wait for the transaction to be mined
       const receipt = await response.wait();
       console.log("Transaction receipt", receipt);
 
-      // Fetch and set the token ID after minting
       await handleGetOwnedTokens();
 
       notification.success({
@@ -217,14 +254,13 @@ function UniversityPage() {
 
   return (
     <Layout style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <Content style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-        {!walletConnected && (
-          <Button onClick={connectWallet} style={{ width: '200px' }}>Connect Wallet</Button>
-        )}
-
-        {walletConnected && (
+      <Content>
+        {!walletConnected ? (
+          <Button onClick={connectWallet}>Connect Wallet</Button>
+        ) : (
           <>
-            <h1>Account: {account}</h1>
+            <h2>University Name: {universityName}</h2>
+            <h2>University Website: {universityWebsite}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
               <Input type="file" style={{ width: '200px' }} onChange={(e) => setSelectedFile(e.target.files[0])} />
             </div>
