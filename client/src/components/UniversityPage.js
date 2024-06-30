@@ -79,25 +79,6 @@ function UniversityPage() {
         }
       });
 
-
-      const fetchStudent = async () => {
-        try {
-          if (!signer) {
-            await connectWallet();
-          }
-          const contract = new ethers.Contract(studentRecordAddress, StudentRecord.abi, signer);
-          const student = await contract.getStudent();
-          if (student.firstName) {
-            setStudent(student);
-            console.log("Student record found:", student);
-            await fetchImages(walletAddress); // Fetch images related to student's wallet address
-          } else {
-            console.log("No student record found.");
-          }
-        } catch (error) {
-          console.error("No student record found:", error);
-        }
-      };
       console.log("File pinned successfully:", res.data);
 
       setIpfsHash(res.data.IpfsHash);
