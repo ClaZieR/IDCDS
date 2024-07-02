@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Button } from 'antd';
 
 function Verify({ walletAddress, refreshStatus }) {
   const [isVerified, setIsVerified] = useState(false);
@@ -21,7 +22,7 @@ function Verify({ walletAddress, refreshStatus }) {
     <>
       {!isVerified && (
         <div>
-          <button onClick={handleVerify}>Verify DNS TXT Record</button>
+          <Button type="primary" onClick={handleVerify}>Verify DNS TXT Record</Button>
         </div>
       )}
     </>

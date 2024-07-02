@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { ethers } from 'ethers';
+import { Button, Card, Layout, Typography, Spin, Divider } from 'antd';
 import Register from './Register';
 import Status from './Status';
 import Verify from './Verify';
-import { ethers } from 'ethers'; // Import ethers.js
+
+const { Header, Content, Footer } = Layout;
+const { Title } = Typography;
 
 function Unifront() {
   const [walletAddress, setWalletAddress] = useState(null);
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [renderRegister, setRenderRegister] = useState(false);
-  const navigate = useNavigate(); // Use the useNavigate hook
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (walletAddress) {
@@ -20,7 +24,7 @@ function Unifront() {
 
   useEffect(() => {
     if (verificationStatus && verificationStatus.verification_status === 'verified') {
-      navigate('/university'); // Redirect to /university if verified
+      navigate('/university');
     }
   }, [verificationStatus, navigate]);
 
@@ -59,28 +63,47 @@ function Unifront() {
   };
 
   return (
-    <div>
-      <h1>University Verification</h1>
-      {walletAddress ? (
-        verificationStatus ? (
-          <div>
-            <Status status={verificationStatus} />
-            {(verificationStatus.verification_status === 'pending' || verificationStatus.verification_status === 'failed') && (
-              <Verify walletAddress={walletAddress} refreshStatus={checkStatus} />
-            )}
-          </div>
-        ) : (
-          renderRegister && (
-            <div>
-              <Register walletAddress={walletAddress} />
-              <button onClick={checkStatus}>Check Status</button>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header style={{ backgroundColor: '#001529', padding: '10px 60px', minHeight: '150px', marginTop: '20px' }}>
+        <Divider>
+          <Title style={{ color: '#fff', lineHeight: '64px' }}>University Verification</Title>
+        </Divider>
+      </Header>
+      <Content style={{ padding: '50px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Card style={{ maxWidth: '800px', width: '100%' }}>
+          {walletAddress ? (
+            verificationStatus ? (
+              <div>
+                <Status status={verificationStatus} />
+                {(verificationStatus.verification_status === 'pending' || verificationStatus.verification_status === 'failed') && (
+                  <Verify walletAddress={walletAddress} refreshStatus={checkStatus} />
+                )}
+              </div>
+            ) : (
+              renderRegister ? (
+                <div>
+                  <Register walletAddress={walletAddress} />
+                </div>
+              ) : (
+                <Spin size="large" />
+              )
+            )
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Button type="primary" onClick={connectWallet}>Connect Metamask</Button>
             </div>
-          )
-        )
-      ) : (
-        <button onClick={connectWallet}>Connect Metamask</button>
-      )}
-    </div>
+          )}
+          {walletAddress && renderRegister && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+              <Button type="primary" onClick={checkStatus}>Check Status</Button>
+            </div>
+          )}
+        </Card>
+      </Content>
+      <Footer style={{ textAlign: 'center' }}>
+        University Verification ©2024 Created By Chamith Silva
+      </Footer>
+    </Layout>
   );
 }
 

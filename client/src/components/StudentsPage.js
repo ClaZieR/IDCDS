@@ -3,6 +3,12 @@ import StudentRecord from "./StudentRecord.json";
 import { ethers } from "ethers";
 import contractABI from './IDCDS.json';
 import axios from 'axios';
+import { Layout, Typography, Divider, Card, Button, Form, Input, Row, Col, Avatar, Descriptions, Alert } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
+
+const { Header, Content } = Layout;
+const { Title, Text } = Typography;
+
 
 const studentRecordAddress = "0x664C935800D333006f3C74aB5CB5b91AD8577680";
 const contractAddress = "0x7EF8C8c735aF5e06f03D1a10CfC8C06C2f4aCA9b"; // Replace with your actual contract address
@@ -133,72 +139,109 @@ function StudentsPage() {
   };
 
   return (
-    <div>
-      <h1>Student Registration</h1>
+    <Layout style={{ minHeight: '100vh' }}>
+  <Header style={{ backgroundColor: '#001529', padding: '10px 60px', minHeight: '150px', marginTop: '20px' }}>
+    <Divider>
+      <Title style={{ color: '#fff', lineHeight: '64px' }}>Student Portal</Title>
+    </Divider>
+  </Header>
+  <Content style={{ padding: '50px' }}>
+    <Card style={{ maxWidth: '800px', margin: '0 auto' }}>
       {!walletConnected ? (
-        <button onClick={connectWallet}>Connect Wallet</button>
+        <Button type="primary" onClick={connectWallet} style={{ width: 'auto', margin: '0 auto', display: 'block' }}>
+          Connect Wallet
+        </Button>
       ) : (
         <>
           {student ? (
-            <div>
-              <h2>Student Record</h2>
-              <p>First Name: {student.firstName}</p>
-              <p>Middle Name: {student.middleName}</p>
-              <p>Last Name: {student.lastName}</p>
-              <p>Birthday: {student.birthday}</p>
-              <p>Occupancy: {student.occupancy}</p>
-              <p>College: {student.college}</p>
+            <div style={{ textAlign: 'center' }}>
+              <Avatar size={64} icon={<UserOutlined />} />
+              <Title level={3} style={{ marginTop: '16px' }}>{student.firstName} {student.lastName}</Title>
+              <Descriptions bordered column={1}>
+                <Descriptions.Item label="First Name">{student.firstName}</Descriptions.Item>
+                <Descriptions.Item label="Middle Name">{student.middleName}</Descriptions.Item>
+                <Descriptions.Item label="Last Name">{student.lastName}</Descriptions.Item>
+                <Descriptions.Item label="Birthday">{student.birthday}</Descriptions.Item>
+                <Descriptions.Item label="Occupancy">{student.occupancy}</Descriptions.Item>
+                <Descriptions.Item label="College">{student.college}</Descriptions.Item>
+              </Descriptions>
             </div>
           ) : (
-            <>
-              <input
-                placeholder="First Name"
-                onChange={(e) => setFormInput({ ...formInput, firstName: e.target.value })}
-              />
-              <input
-                placeholder="Middle Name"
-                onChange={(e) => setFormInput({ ...formInput, middleName: e.target.value })}
-              />
-              <input
-                placeholder="Last Name"
-                onChange={(e) => setFormInput({ ...formInput, lastName: e.target.value })}
-              />
-              <input
-                placeholder="Birthday"
-                onChange={(e) => setFormInput({ ...formInput, birthday: e.target.value })}
-              />
-              <input
-                placeholder="Occupancy"
-                onChange={(e) => setFormInput({ ...formInput, occupancy: e.target.value })}
-              />
-              <input
-                placeholder="College"
-                onChange={(e) => setFormInput({ ...formInput, college: e.target.value })}
-              />
-              <button onClick={addStudent}>Register</button>
-            </>
+            <Form layout="vertical">
+              <Form.Item label="First Name">
+                <Input
+                  placeholder="First Name"
+                  onChange={(e) => setFormInput({ ...formInput, firstName: e.target.value })}
+                />
+              </Form.Item>
+              <Form.Item label="Middle Name">
+                <Input
+                  placeholder="Middle Name"
+                  onChange={(e) => setFormInput({ ...formInput, middleName: e.target.value })}
+                />
+              </Form.Item>
+              <Form.Item label="Last Name">
+                <Input
+                  placeholder="Last Name"
+                  onChange={(e) => setFormInput({ ...formInput, lastName: e.target.value })}
+                />
+              </Form.Item>
+              <Form.Item label="Birthday">
+                <Input
+                  placeholder="Birthday"
+                  onChange={(e) => setFormInput({ ...formInput, birthday: e.target.value })}
+                />
+              </Form.Item>
+              <Form.Item label="Occupancy">
+                <Input
+                  placeholder="Occupancy"
+                  onChange={(e) => setFormInput({ ...formInput, occupancy: e.target.value })}
+                />
+              </Form.Item>
+              <Form.Item label="College">
+                <Input
+                  placeholder="College"
+                  onChange={(e) => setFormInput({ ...formInput, college: e.target.value })}
+                />
+              </Form.Item>
+              <Form.Item>
+                <Button type="primary" onClick={addStudent} block>
+                  Register
+                </Button>
+              </Form.Item>
+            </Form>
           )}
           {ipfsUrls.length > 0 && (
             <div>
-              <h2>Student Certificates</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+              <Title level={3}>STUDENT CERTIFICATES</Title>
+              <Row gutter={16}>
                 {ipfsUrls.map((ipfsData, index) => (
-                  <div key={index} style={{ margin: '10px' }}>
-                    <img src={ipfsData.url} alt={`Student Certificate ${index}`} style={{ width: '200px', height: '200px' }} />
-                    <p>University: {ipfsData.universityName}</p>
-                    <p>Issued Date: {ipfsData.issuedDate}</p>
-                    <p>Certificate: {ipfsData.certificate}</p>
-                    {ipfsData.isVerified && <p>Verified</p>}
-                  </div>
+                  <Col span={8} key={index} style={{ marginBottom: '16px' }}>
+                    <Card
+                      cover={<img src={ipfsData.url} alt={`Student Certificate ${index}`} style={{ width: '100%', height: 'auto' }} />}
+                    >
+                      <Card.Meta
+                        title={ipfsData.certificate}
+                        description={
+                          <div>
+                            <p><b>University:</b>{ipfsData.universityName}</p>
+                            <p><b>Issued Date:</b>{ipfsData.issuedDate}</p>
+                            {ipfsData.isVerified && <Alert message="Verified" type="success" showIcon />}
+                          </div>
+                        }
+                      />
+                    </Card>
+                  </Col>
                 ))}
-              </div>
+              </Row>
             </div>
           )}
         </>
       )}
-    </div>
+    </Card>
+  </Content>
+</Layout>
   );
-  
 }
 
 export default StudentsPage;

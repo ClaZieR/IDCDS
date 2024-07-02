@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { Input, Button, Grid } from 'antd';
-import contractABI from './IDCDS.json';
-import StudentRecord from "./StudentRecord.json"; // Import your StudentRecord contract ABI
+import { Layout, Typography, Divider, Card, Button, Input, Row, Col, Avatar, Descriptions, Alert } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 import { ethers } from 'ethers';
 import axios from 'axios';
+import contractABI from './IDCDS.json';
+import StudentRecord from "./StudentRecord.json"; // Import your StudentRecord contract ABI
 
-const { useBreakpoint } = Grid;
+const { Header, Content } = Layout;
+const { Title } = Typography;
 
 const contractAddress = "0x7EF8C8c735aF5e06f03D1a10CfC8C06C2f4aCA9b"; // Replace with your actual contract address
 const studentRecordAddress = "0x664C935800D333006f3C74aB5CB5b91AD8577680"; // Replace with your actual student record contract address
 
 function CompaniesPage() {
-  const screens = useBreakpoint();
   const [customWalletAddress, setCustomWalletAddress] = useState("");
   const [tokens, setTokens] = useState([]);
   const [ipfsUrls, setIpfsUrls] = useState([]);
@@ -66,46 +67,73 @@ function CompaniesPage() {
   };
 
   return (
-    <center>
-      <h1>Companies Page</h1>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header style={{ backgroundColor: '#001529', padding: '10px 60px', minHeight: '150px', marginTop: '20px' }}>
+        <Divider>
+          <Title style={{ color: '#fff', lineHeight: '64px' }}>Companies Portal</Title>
+        </Divider>
+      </Header>
+      <Content style={{ padding: '50px' }}>
+      <Card style={{ maxWidth: '800px', margin: '0 auto' }}>
+  <Row gutter={16}>
+    <Col flex="auto">
       <Input
         type="text"
         placeholder="Enter custom wallet address"
         value={customWalletAddress}
-        style={{ width: '400px', marginTop: '20px' }}
         onChange={(e) => setCustomWalletAddress(e.target.value)}
       />
-      <Button type="primary" onClick={handleGetOwnedTokens} style={{ marginTop: '10px' }}>
+    </Col>
+    <Col>
+      <Button type="primary" onClick={handleGetOwnedTokens}>
         Get Owned Tokens
       </Button>
+    </Col>
+  </Row>
 
-      {student && (
-        <div style={{ marginTop: '20px' }}>
-          <h2>Student Record</h2>
-          <p>First Name: {student.firstName}</p>
-          <p>Middle Name: {student.middleName}</p>
-          <p>Last Name: {student.lastName}</p>
-          <p>Birthday: {student.birthday}</p>
-          <p>Occupancy: {student.occupancy}</p>
-          <p>College: {student.college}</p>
-        </div>
-      )}
+  {student && (
+    <div style={{ marginTop: '20px', textAlign: 'center' }}>
+      <Avatar size={64} icon={<UserOutlined />} />
+      <Title level={3} style={{ marginTop: '16px' }}>{student.firstName} {student.lastName}</Title>
+      <Descriptions bordered column={1}>
+        <Descriptions.Item label="First Name">{student.firstName}</Descriptions.Item>
+        <Descriptions.Item label="Middle Name">{student.middleName}</Descriptions.Item>
+        <Descriptions.Item label="Last Name">{student.lastName}</Descriptions.Item>
+        <Descriptions.Item label="Birthday">{student.birthday}</Descriptions.Item>
+        <Descriptions.Item label="Occupancy">{student.occupancy}</Descriptions.Item>
+        <Descriptions.Item label="College">{student.college}</Descriptions.Item>
+      </Descriptions>
+    </div>
+  )}
 
-      {displayOwnedTokens && ipfsUrls.length > 0 && (
-        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <h2>Student Certificates</h2>
-          {ipfsUrls.map((ipfsData, index) => (
-            <div key={index} style={{ margin: '10px' }}>
-              <img src={ipfsData.url} alt={`Student Certificate ${index}`} style={{ width: '200px', height: '200px' }} />
-              <p>University: {ipfsData.universityName}</p>
-              <p>Issued Date: {ipfsData.issuedDate}</p>
-              <p>Certificate: {ipfsData.certificate}</p>
-              {ipfsData.isVerified && <p>Verified</p>}
-            </div>
-          ))}
-        </div>
-      )}
-    </center>
+  {displayOwnedTokens && ipfsUrls.length > 0 && (
+    <div>
+      <Title level={3}>STUDENT CERTIFICATES</Title>
+      <Row gutter={16}>
+        {ipfsUrls.map((ipfsData, index) => (
+          <Col span={8} key={index} style={{ marginBottom: '16px' }}>
+            <Card
+              cover={<img src={ipfsData.url} alt={`Student Certificate ${index}`} style={{ width: '100%', height: 'auto' }} />}
+            >
+              <Card.Meta
+                title={ipfsData.certificate}
+                description={
+                  <div>
+                    <p><b>University:</b>{ipfsData.universityName}</p>
+                    <p><b>Issued Date:</b>{ipfsData.issuedDate}</p>
+                    {ipfsData.isVerified && <Alert message="Verified" type="success" showIcon />}
+                  </div>
+                }
+              />
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </div>
+  )}
+</Card>
+      </Content>
+    </Layout>
   );
 }
 
