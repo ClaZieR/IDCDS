@@ -118,7 +118,7 @@ function StudentsPage() {
         setIssuedDate(data.IssuedDate);
         setCertificate(data.name);
         // Fetch verification status
-        const verificationResponse = await axios.get(`http://localhost:1433/status/${data.universityWallet}`);
+        const verificationResponse = await axios.get(`https://server-divine-grass-2313.fly.dev/status/${data.universityWallet}`);
 
         const isVerified = verificationResponse.data.verification_status === 'verified';
         
@@ -126,7 +126,7 @@ function StudentsPage() {
           url: data.ipfsUrl,
           isVerified,
           universityName: data.universityName,
-          issuedDate: data.issuedDate,
+          issuedDate: data.IssuedDate,
           certificate: data.name
         });
       }

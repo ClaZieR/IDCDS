@@ -43,7 +43,7 @@ function UniversityPage() {
 
   const fetchUnidata = async (addressWallet) => {
     try {
-      const response = await axios.get(`http://localhost:1433/university/${addressWallet}`);
+      const response = await axios.get(`https://server-divine-grass-2313.fly.dev/university/${addressWallet}`);
       setUniversityID(response.data.id);
       setUniversityName(response.data.name);
       setUniversityWebsite(response.data.website);      

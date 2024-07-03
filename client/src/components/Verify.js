@@ -7,7 +7,7 @@ function Verify({ walletAddress, refreshStatus }) {
 
   const handleVerify = async () => {
     try {
-      const response = await axios.post('http://localhost:1433/verify', { walletAddress });
+      const response = await axios.post('https://server-divine-grass-2313.fly.dev/verify', { walletAddress });
       console.log(response.data); // Log the response data to the console
       if (response.data.msg.includes('Verification verified')) {
         setIsVerified(true); // Set state to true when verification is successful

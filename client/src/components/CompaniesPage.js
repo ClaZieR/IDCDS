@@ -46,14 +46,14 @@ function CompaniesPage() {
           const response = await axios.get(uri);
           const data = response.data;
 
-          const verificationResponse = await axios.get(`http://localhost:1433/status/${data.universityWallet}`);
+          const verificationResponse = await axios.get(`https://server-divine-grass-2313.fly.dev/status/${data.universityWallet}`);
           const isVerified = verificationResponse.data.verification_status === 'verified';
 
           ipfsUrls.push({
             url: data.ipfsUrl,
             isVerified,
             universityName: data.universityName,
-            issuedDate: data.issuedDate,
+            issuedDate: data.IssuedDate,
             certificate: data.name
           });
         }

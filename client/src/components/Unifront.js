@@ -47,7 +47,7 @@ function Unifront() {
   const checkStatus = async () => {
     if (walletAddress) {
       try {
-        const response = await axios.get(`http://localhost:1433/status/${walletAddress}`);
+        const response = await axios.get(`https://server-divine-grass-2313.fly.dev/status/${walletAddress}`);
         console.log(response.data);
         if (response.data.msg === 'No record found') {
           setRenderRegister(true);

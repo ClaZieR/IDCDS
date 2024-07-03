@@ -15,7 +15,7 @@ function Register({ walletAddress }) {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post('http://localhost:1433/register', { ...formData, walletAddress });
+      const response = await axios.post('https://server-divine-grass-2313.fly.dev/register', { ...formData, walletAddress });
       setTxtRecord(response.data.txtRecord);
     } catch (error) {
       console.error("Error during registration:", error);
